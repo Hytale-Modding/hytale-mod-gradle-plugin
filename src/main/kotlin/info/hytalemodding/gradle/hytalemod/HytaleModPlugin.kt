@@ -1,6 +1,5 @@
 package info.hytalemodding.gradle.hytalemod
 
-import info.hytalemodding.gradle.hytalemod.util.hytale
 import info.hytalemodding.gradle.hytalemod.util.ideaExt
 import info.hytalemodding.gradle.hytalemod.util.main
 import info.hytalemodding.gradle.hytalemod.util.sourceSets
@@ -22,12 +21,9 @@ abstract class HytaleModPlugin: Plugin<Project> {
         target.pluginManager.apply("idea")
         target.pluginManager.apply("org.jetbrains.gradle.plugin.idea-ext")
 
-        target.extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
-
-        target.afterEvaluate {
+        with(target) {
+            val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
-
-            val hytaleExtension = extensions.hytale
 
             repositories {
                 maven("https://maven.hytale-modding.info/releases") {
@@ -42,7 +38,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
             dependencies {
                 // TODO should we make this configurable?
-                "implementation"(files("${hytaleExtension.serverDir.get()}/HytaleServer.jar"))
+                "implementation"(files(hytaleExtension.serverDir.map { "${it}/HytaleServer.jar" }))
             }
 
             hytaleExtension.syncTask.orNull?.let { it: Task ->
@@ -51,39 +47,40 @@ abstract class HytaleModPlugin: Plugin<Project> {
                 }
             }
 
-            mkdir(hytaleExtension.runDir)
+            afterEvaluate {
+                mkdir(hytaleExtension.runDir)
 
-            // TODO make server properties configurable
-            val programArgs = mutableListOf(
-                "--assets=${hytaleExtension.assetsDir.get()}"
-            )
+                // TODO make server properties configurable
+                val programArgs = mutableListOf(
+                    "--assets=${hytaleExtension.assetsDir.get()}"
+                )
 
-            if(hytaleExtension.allowOp.get()) {
-                programArgs.add("--allow-op")
-            }
+                if(hytaleExtension.allowOp.get()) {
+                    programArgs.add("--allow-op")
+                }
 
-            if(hytaleExtension.disableSentry.get()) {
-                programArgs.add("--disable-sentry")
-            }
+                if(hytaleExtension.disableSentry.get()) {
+                    programArgs.add("--disable-sentry")
+                }
 
-            if(hytaleExtension.disableFileWatcher.get()) {
-                programArgs.add("--disable-file-watcher")
-            }
+                if(hytaleExtension.disableFileWatcher.get()) {
+                    programArgs.add("--disable-file-watcher")
+                }
 
-            hytaleExtension.authMode.orNull?.let {
-                programArgs.add("--auth-mode=${it}")
-            }
+                hytaleExtension.authMode.orNull?.let {
+                    programArgs.add("--auth-mode=${it}")
+                }
 
-            hytaleExtension.programArgs.orNull?.let { programArgs.addAll(it) }
+                hytaleExtension.programArgs.orNull?.let { programArgs.addAll(it) }
 
-            val aotFile = project.file("${hytaleExtension.serverDir.get()}/HytaleServer.aot")
-            val aotArg = if (aotFile.exists()) "-XX:AOTCache=${aotFile.absolutePath}" else ""
+                val aotFile = project.file("${hytaleExtension.serverDir.get()}/HytaleServer.aot")
+                val aotArg = if (aotFile.exists()) "-XX:AOTCache=${aotFile.absolutePath}" else ""
 
-            val javaArgs = mutableListOf(aotArg)
-            hytaleExtension.jvmArgs.orNull?.let { javaArgs.addAll(it) }
-            javaArgs.add("--enable-native-access=ALL-UNNAMED")
+                val javaArgs = mutableListOf(aotArg)
+                hytaleExtension.jvmArgs.orNull?.let { javaArgs.addAll(it) }
+                javaArgs.add("--enable-native-access=ALL-UNNAMED")
 
-            // FIXME IDEA bug: need to somehow get the run configs to *run* with the project's JDK not the root project's JDK version.
+                // FIXME IDEA bug: need to somehow get the run configs to *run* with the project's JDK not the root project's JDK version.
 //    val projectModuleName = if (project == rootProject) {
 //        "${ideaModel.project.name}.main"
 //    } else {
@@ -112,34 +109,35 @@ abstract class HytaleModPlugin: Plugin<Project> {
 //        }
 //    }
 
-            val runTask = tasks.register("runServer", JavaExec::class.java) {
-                mainClass.set("com.hypixel.hytale.Main")
-                modularity.inferModulePath.set(true)
-                classpath = sourceSets.main.runtimeClasspath
-                args = programArgs
-                jvmArgs = javaArgs
-                standardInput = System.`in`
+                val runTask = tasks.register("runServer", JavaExec::class.java) {
+                    mainClass.set("com.hypixel.hytale.Main")
+                    modularity.inferModulePath.set(true)
+                    classpath = sourceSets.main.runtimeClasspath
+                    args = programArgs
+                    jvmArgs = javaArgs
+                    standardInput = System.`in`
 
-                workingDir(hytaleExtension.runDir)
+                    workingDir(hytaleExtension.runDir)
 
-                hytaleExtension.syncTask.orNull?.let {
-                    dependsOn(it)
-                }
-            }
-
-            // Task#path but we cant access that because it's a TaskProvider
-            val taskPath = buildString {
-                if (project.path != rootProject.path) {
-                    append(project.path)
+                    hytaleExtension.syncTask.orNull?.let {
+                        dependsOn(it)
+                    }
                 }
 
-                append(":${runTask.name}")
-            }
+                // Task#path but we cant access that because it's a TaskProvider
+                val taskPath = buildString {
+                    if (project.path != rootProject.path) {
+                        append(project.path)
+                    }
 
-            ideaModel.project.settings {
-                runConfigurations {
-                    create<Gradle>(hytaleExtension.runConfigName.get()) {
-                        taskNames = listOf(taskPath)
+                    append(":${runTask.name}")
+                }
+
+                ideaModel.project.settings {
+                    runConfigurations {
+                        create<Gradle>(hytaleExtension.runConfigName.get()) {
+                            taskNames = listOf(taskPath)
+                        }
                     }
                 }
             }
