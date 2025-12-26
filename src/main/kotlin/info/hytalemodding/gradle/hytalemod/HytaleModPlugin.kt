@@ -7,7 +7,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.JavaExec
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.named
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.gradle.ext.Gradle
 import org.jetbrains.gradle.ext.runConfigurations
@@ -24,17 +26,6 @@ abstract class HytaleModPlugin: Plugin<Project> {
         with(target) {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
-
-            repositories {
-                maven("https://maven.hytale-modding.info/releases") {
-                    name = "HytaleModdingReleases"
-                    // FIXME remove once maven becomes public
-                    credentials {
-                        username = "tmp_viewer"
-                        password = "01KDD2ARZ795FTWBW0A97RP5RS"
-                    }
-                }
-            }
 
             dependencies {
                 // TODO should we make this configurable?
