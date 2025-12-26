@@ -10,6 +10,12 @@ version = providers.environmentVariable("PLUGIN_VERSION").orNull ?: "0.0.0-devel
 // Kotlin does not support building with Java 25 yet.
 val javaVersion = 21
 
+val pluginId: String by project
+val pluginDisplayName: String by project
+val pluginMainClass: String by project
+val pluginVcsUrl: String by project
+val pluginWebsite: String by project
+
 repositories {
     gradlePluginPortal()
     mavenCentral()
@@ -39,11 +45,14 @@ idea.module {
 
 gradlePlugin {
     plugins {
-        create("hytale-mod") {
-            id = "hytale-mod"
-            implementationClass = "info.hytalemodding.gradle.hytalemod.HytaleModPlugin"
-            displayName = "Hytale-Mod"
-        }
+        create("hytale-mod", closureOf<PluginDeclaration> {
+            id = pluginId
+            displayName = pluginDisplayName
+            implementationClass = pluginMainClass
+            vcsUrl = pluginVcsUrl
+            website = pluginWebsite
+            // TODO description, tags
+        })
     }
 }
 
