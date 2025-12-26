@@ -19,8 +19,6 @@ dependencies {
     compileOnly(gradleApi())
     compileOnly(gradleKotlinDsl())
 
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0")
-
     implementation("net.harawata:appdirs:1.5.0")
     implementation("org.jetbrains.gradle.plugin.idea-ext:org.jetbrains.gradle.plugin.idea-ext.gradle.plugin:1.3")
 }
