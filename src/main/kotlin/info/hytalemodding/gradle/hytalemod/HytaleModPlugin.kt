@@ -1,5 +1,6 @@
 package info.hytalemodding.gradle.hytalemod
 
+import info.hytalemodding.gradle.hytalemod.decompile.registerDecompileTask
 import info.hytalemodding.gradle.hytalemod.util.ideaExt
 import info.hytalemodding.gradle.hytalemod.util.main
 import info.hytalemodding.gradle.hytalemod.util.sourceSets
@@ -29,7 +30,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
             dependencies {
                 // TODO should we make this configurable?
-                "implementation"(files(hytaleExtension.serverDir.map { "${it}/HytaleServer.jar" }))
+                "implementation"(files(hytaleExtension.serverJar))
             }
 
             hytaleExtension.syncTask.orNull?.let { it: Task ->
@@ -101,6 +102,8 @@ abstract class HytaleModPlugin: Plugin<Project> {
 //    }
 
                 val runTask = tasks.register("runServer", JavaExec::class.java) {
+                    group = HytaleExtension.TASK_GROUP
+
                     mainClass.set("com.hypixel.hytale.Main")
                     modularity.inferModulePath.set(true)
                     classpath = sourceSets.main.runtimeClasspath
@@ -132,6 +135,8 @@ abstract class HytaleModPlugin: Plugin<Project> {
                     }
                 }
             }
+
+            project.registerDecompileTask()
         }
     }
 }

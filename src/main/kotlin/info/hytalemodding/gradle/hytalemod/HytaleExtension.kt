@@ -6,6 +6,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -18,6 +19,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
     companion object {
         const val EXTENSION_NAME = "hytale"
+        const val TASK_GROUP = "hytale"
     }
 
     @get:InputDirectory
@@ -28,6 +30,9 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
     @get:InputDirectory
     abstract val serverDir: Property<String>
+
+    val serverJar: Provider<String>
+        get() = serverDir.map { "${it}/HytaleServer.jar" }
 
     @get:InputDirectory
     abstract val hytaleUserDir: Property<String>
