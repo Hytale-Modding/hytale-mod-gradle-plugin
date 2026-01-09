@@ -96,6 +96,6 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         allowOp.convention(true)
         disableSentry.convention(true)
         disableFileWatcher.convention(false)
-        authMode.convention("insecure")
+        authMode.convention("authenticated")
     }
 }
