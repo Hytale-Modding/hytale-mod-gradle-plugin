@@ -76,7 +76,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
         gameDir.convention(factory.provider {
             val appDirs: AppDirs = AppDirsFactory.getInstance()
-            appDirs.getUserConfigDir("Hytale", null, null, true)
+            appDirs.getUserDataDir("Hytale", null, null, true)
         })
         assetsDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip" })
         serverDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Server" })
