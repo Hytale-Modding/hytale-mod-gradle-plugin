@@ -2,6 +2,7 @@ package info.hytalemodding.gradle.hytalemod
 
 import net.harawata.appdirs.AppDirs
 import net.harawata.appdirs.AppDirsFactory
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.ListProperty
@@ -75,8 +76,17 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         updateChannel.convention(defaultUpdateChannel)
 
         gameDir.convention(factory.provider {
+            // FIXME kinda a hack, figure out whether there's a better way to do this
             val appDirs: AppDirs = AppDirsFactory.getInstance()
-            appDirs.getUserDataDir("Hytale", null, null, true)
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                return@provider appDirs.getUserConfigDir("Hytale", null, null, true);
+            }
+            else if (Os.isFamily(Os.FAMILY_MAC)) {
+                return@provider appDirs.getUserDataDir("Hytale", null, null, true);
+            }
+            else { // linux is special and ships as flatpak
+                return@provider "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+            }
         })
         assetsDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip" })
         serverDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Server" })
