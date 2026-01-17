@@ -12,9 +12,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
+import java.io.File
 import javax.inject.Inject
 
 const val defaultUpdateChannel = "release"
@@ -26,59 +24,43 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         const val TASK_GROUP = "hytale"
     }
 
-    @get:InputDirectory
     abstract val gameDir: DirectoryProperty
 
-    @get:InputDirectory
     abstract val assetsFile: RegularFileProperty
 
-    @get:InputDirectory
     abstract val serverDir: DirectoryProperty
 
     val serverJar: Provider<RegularFile>
         get() = serverDir.file("HytaleServer.jar")
 
-    @get:InputDirectory
     abstract val hytaleUserDir: DirectoryProperty
 
-    @get:Input
     abstract val updateChannel: Property<String>
 
-    @get:Input
     abstract val runConfigName: Property<String>
 
-    @get:OutputDirectory
     abstract val runDir: Property<String>
 
-    @get:Input
     abstract val syncTask: Property<Task>
 
-    @get:Input
     abstract val allowOp: Property<Boolean>
 
-    @get:Input
     abstract val disableSentry: Property<Boolean>
 
-    @get:Input
     abstract val disableFileWatcher: Property<Boolean>
 
     //TODO make enum
     /**
      * authenticated|offline|insecure
      */
-    @get:Input
     abstract val authMode: Property<String>
 
-    @get:Input
     abstract val programArgs: ListProperty<String>
 
-    @get:Input
     abstract val jvmArgs: ListProperty<String>
 
-    @get:Input
     abstract val addServerDependency: Property<Boolean>
 
-    @get:Input
     abstract val addAssetsDependency: Property<Boolean>
 
     init {
@@ -98,7 +80,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
                 "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
             }
 
-            return@provider project.file(dir)
+            return@provider File(dir)
         }))
         assetsFile.convention(gameDir.file(updateChannel.map { channel -> "install/${channel}/package/game/latest/Assets.zip" }))
         serverDir.convention(gameDir.dir(updateChannel.map { channel -> "install/${channel}/package/game/latest/Server" }))
