@@ -37,7 +37,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
             afterEvaluate {
                 dependencies {
                     if(hytaleExtension.addServerDependency.get()) {
-                        "compileOnly"(files(hytaleExtension.serverJar))
+                        "implementation"(files(hytaleExtension.serverJar))
                     }
 
                     if(hytaleExtension.addAssetsDependency.get()) {
@@ -49,7 +49,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                 // TODO make server properties configurable
                 val programArgs = mutableListOf(
-                    "--assets=${hytaleExtension.assetsFile.get()}"
+                    "--assets=${hytaleExtension.assetsFile.get().asFile.absolutePath}"
                 )
 
                 if(hytaleExtension.allowOp.get()) {
@@ -70,7 +70,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                 hytaleExtension.programArgs.orNull?.let { programArgs.addAll(it) }
 
-                val aotFile = project.file("${hytaleExtension.serverDir.get()}/HytaleServer.aot")
+                val aotFile = hytaleExtension.serverDir.file("HytaleServer.aot").get().asFile
                 val aotArg = if (aotFile.exists()) "-XX:AOTCache=${aotFile.absolutePath}" else ""
 
                 val javaArgs = mutableListOf(aotArg)

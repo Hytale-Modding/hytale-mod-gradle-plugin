@@ -23,20 +23,20 @@ fun Project.registerDecompileTask() {
         val decompileServerTask = tasks.register("decompileServer", JavaExec::class.java) {
             group = HytaleExtension.TASK_GROUP
 
-            val serverJarPath = hytaleExtension.serverJar
-            val sourcesFilePath = hytaleExtension.serverDir.map { "${it}/HytaleServer-src.zip" }
+            val serverJar = hytaleExtension.serverJar
+            val sourcesFile = hytaleExtension.serverDir.file("${serverJar.get().asFile.nameWithoutExtension}-src.zip")
 
             workingDir = temporaryDir
             mainClass.set("org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler")
             classpath = vf
 
             args = listOf(
-                file(serverJarPath).absolutePath,
-                file(sourcesFilePath).absolutePath
+                serverJar.get().asFile.absolutePath,
+                sourcesFile.get().asFile.absolutePath
             )
 
-            inputs.file(serverJarPath)
-            outputs.file(sourcesFilePath)
+            inputs.file(serverJar)
+            outputs.file(sourcesFile)
         }
     }
 }

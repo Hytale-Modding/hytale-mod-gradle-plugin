@@ -36,7 +36,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     abstract val serverDir: DirectoryProperty
 
     val serverJar: Provider<RegularFile>
-        get() = serverDir.map { it.file("HytaleServer.jar") }
+        get() = serverDir.file("HytaleServer.jar")
 
     @get:InputDirectory
     abstract val hytaleUserDir: DirectoryProperty
