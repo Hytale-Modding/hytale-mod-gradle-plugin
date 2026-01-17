@@ -5,6 +5,9 @@ import net.harawata.appdirs.AppDirsFactory
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -24,19 +27,19 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     }
 
     @get:InputDirectory
-    abstract val gameDir: Property<String>
+    abstract val gameDir: DirectoryProperty
 
     @get:InputDirectory
-    abstract val assetsDir: Property<String>
+    abstract val assetsFile: RegularFileProperty
 
     @get:InputDirectory
-    abstract val serverDir: Property<String>
+    abstract val serverDir: DirectoryProperty
 
-    val serverJar: Provider<String>
-        get() = serverDir.map { "${it}/HytaleServer.jar" }
+    val serverJar: Provider<RegularFile>
+        get() = serverDir.map { it.file("HytaleServer.jar") }
 
     @get:InputDirectory
-    abstract val hytaleUserDir: Property<String>
+    abstract val hytaleUserDir: DirectoryProperty
 
     @get:Input
     abstract val updateChannel: Property<String>
@@ -72,25 +75,34 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     @get:Input
     abstract val jvmArgs: ListProperty<String>
 
+    @get:Input
+    abstract val addServerDependency: Property<Boolean>
+
+    @get:Input
+    abstract val addAssetsDependency: Property<Boolean>
+
     init {
         updateChannel.convention(defaultUpdateChannel)
 
-        gameDir.convention(factory.provider {
+        gameDir.convention(project.layout.dir(factory.provider {
             // FIXME kinda a hack, figure out whether there's a better way to do this
             val appDirs: AppDirs = AppDirsFactory.getInstance()
+            val dir =
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                return@provider appDirs.getUserConfigDir("Hytale", null, null, true);
+                appDirs.getUserConfigDir("Hytale", null, null, true);
             }
             else if (Os.isFamily(Os.FAMILY_MAC)) {
-                return@provider appDirs.getUserDataDir("Hytale", null, null, true);
+                appDirs.getUserDataDir("Hytale", null, null, true);
             }
             else { // linux is special and ships as flatpak
-                return@provider "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+                "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
             }
-        })
-        assetsDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip" })
-        serverDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Server" })
-        hytaleUserDir.convention(factory.provider { "${gameDir.get()}/UserData" })
+
+            return@provider project.file(dir)
+        }))
+        assetsFile.convention(gameDir.file(updateChannel.map { channel -> "install/${channel}/package/game/latest/Assets.zip" }))
+        serverDir.convention(gameDir.dir(updateChannel.map { channel -> "install/${channel}/package/game/latest/Server" }))
+        hytaleUserDir.convention(gameDir.dir("UserData"))
 
         runConfigName.convention(factory.provider {
             var name = "HytaleServer"
@@ -107,5 +119,8 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         disableSentry.convention(true)
         disableFileWatcher.convention(false)
         authMode.convention("authenticated")
+
+        addServerDependency.convention(true)
+        addAssetsDependency.convention(false)
     }
 }

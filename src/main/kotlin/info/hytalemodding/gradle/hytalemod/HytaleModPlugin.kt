@@ -28,11 +28,6 @@ abstract class HytaleModPlugin: Plugin<Project> {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
 
-            dependencies {
-                // TODO should we make this configurable?
-                "implementation"(files(hytaleExtension.serverJar))
-            }
-
             hytaleExtension.syncTask.orNull?.let { it: Task ->
                 tasks.named<ProcessResources>("processResources").configure {
                     dependsOn(it)
@@ -40,11 +35,21 @@ abstract class HytaleModPlugin: Plugin<Project> {
             }
 
             afterEvaluate {
+                dependencies {
+                    if(hytaleExtension.addServerDependency.get()) {
+                        "compileOnly"(files(hytaleExtension.serverJar))
+                    }
+
+                    if(hytaleExtension.addAssetsDependency.get()) {
+                        "compileOnly"(files(hytaleExtension.assetsFile))
+                    }
+                }
+
                 mkdir(hytaleExtension.runDir)
 
                 // TODO make server properties configurable
                 val programArgs = mutableListOf(
-                    "--assets=${hytaleExtension.assetsDir.get()}"
+                    "--assets=${hytaleExtension.assetsFile.get()}"
                 )
 
                 if(hytaleExtension.allowOp.get()) {
