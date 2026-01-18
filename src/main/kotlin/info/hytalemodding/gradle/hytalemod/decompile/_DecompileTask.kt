@@ -2,15 +2,16 @@ package info.hytalemodding.gradle.hytalemod.decompile
 
 import info.hytalemodding.gradle.hytalemod.HytaleExtension
 import info.hytalemodding.gradle.hytalemod.util.hytale
-import info.hytalemodding.gradle.hytalemod.util.ideaExt
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.dependencies
-import org.jetbrains.gradle.ext.settings
 
 fun Project.registerDecompileTask() {
-    val ideaModel = rootProject.extensions.ideaExt
-    ideaModel.project.settings.generateImlFiles = true
+    // TODO: register sources automatically
+    //  for this to work we would need to register an afterSync task that modifies
+    //  the iml file to add the dependency. I've given up on it for now.
+//    val ideaModel = rootProject.extensions.ideaExt
+//    ideaModel.project.settings.generateImlFiles = true
 
     val vf = configurations.create("vineFlowerDependencies") {
         isCanBeConsumed = false
