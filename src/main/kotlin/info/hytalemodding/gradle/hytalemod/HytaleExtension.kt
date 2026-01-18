@@ -5,13 +5,11 @@ import net.harawata.appdirs.AppDirsFactory
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
 import javax.inject.Inject
 
 const val defaultUpdateChannel = "release"
@@ -21,76 +19,87 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     companion object {
         const val EXTENSION_NAME = "hytale"
         const val TASK_GROUP = "hytale"
+
+        const val PROPERTY_INSTALL_DIR = "hytale.install_dir"
+        const val PROPERTY_UPDATE_CHANNEL = "hytale.update_channel"
+
+        const val PROPERTY_ADD_ASSETS = "hytale.dependencies.assets"
+        const val PROPERTY_ADD_SERVER = "hytale.dependencies.server"
+
+        const val PROPERTY_DECOMPILE_PARTIAL = "hytale.decompile_partial"
     }
 
-    @get:InputDirectory
+    @Deprecated("use installDir instead!", ReplaceWith("installDir"))
     abstract val gameDir: Property<String>
 
-    @get:InputDirectory
-    abstract val assetsDir: Property<String>
+    abstract val installDir: Property<String>
 
-    @get:InputDirectory
-    abstract val serverDir: Property<String>
+    abstract val assetsFile: RegularFileProperty
 
-    val serverJar: Provider<String>
-        get() = serverDir.map { "${it}/HytaleServer.jar" }
+    abstract val serverDir: DirectoryProperty
 
-    @get:InputDirectory
-    abstract val hytaleUserDir: Property<String>
+    abstract val serverJar: RegularFileProperty
 
-    @get:Input
+    abstract val hytaleUserDir: DirectoryProperty
+
     abstract val updateChannel: Property<String>
 
-    @get:Input
     abstract val runConfigName: Property<String>
 
-    @get:OutputDirectory
     abstract val runDir: Property<String>
 
-    @get:Input
+    @Deprecated("use beforeRunTask instead!", ReplaceWith("beforeRunTask"))
     abstract val syncTask: Property<Task>
+    abstract val beforeRunTask: Property<Task>
 
-    @get:Input
     abstract val allowOp: Property<Boolean>
 
-    @get:Input
     abstract val disableSentry: Property<Boolean>
 
-    @get:Input
     abstract val disableFileWatcher: Property<Boolean>
 
     //TODO make enum
     /**
      * authenticated|offline|insecure
      */
-    @get:Input
     abstract val authMode: Property<String>
 
-    @get:Input
     abstract val programArgs: ListProperty<String>
 
-    @get:Input
     abstract val jvmArgs: ListProperty<String>
 
-    init {
-        updateChannel.convention(defaultUpdateChannel)
+    abstract val addServerDependency: Property<Boolean>
 
-        gameDir.convention(factory.provider {
-            // FIXME kinda a hack, figure out whether there's a better way to do this
+    abstract val addAssetsDependency: Property<Boolean>
+
+    abstract val decompilePartialOnly: Property<Boolean>
+
+    init {
+        updateChannel.convention(project.providers.gradleProperty(PROPERTY_UPDATE_CHANNEL).orElse(defaultUpdateChannel))
+
+        // if hytale.install_dir is set, default to that;
+        // else use the default install location
+        @Suppress("DEPRECATION")
+        gameDir.convention(project.providers.gradleProperty(PROPERTY_INSTALL_DIR).orElse(factory.provider {
             val appDirs: AppDirs = AppDirsFactory.getInstance()
-            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                return@provider appDirs.getUserConfigDir("Hytale", null, null, true);
-            }
-            else if (Os.isFamily(Os.FAMILY_MAC)) {
-                return@provider appDirs.getUserDataDir("Hytale", null, null, true);
-            }
-            else { // linux is special and ships as flatpak
-                return@provider "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
-            }
-        })
-        assetsDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip" })
-        serverDir.convention(factory.provider { "${gameDir.get()}/install/${updateChannel.get()}/package/game/latest/Server" })
-        hytaleUserDir.convention(factory.provider { "${gameDir.get()}/UserData" })
+            val dir =
+                if (Os.isFamily(Os.FAMILY_WINDOWS) || Os.isFamily(Os.FAMILY_MAC)) {
+                    appDirs.getUserDataDir("Hytale", null, null, true);
+                }
+                else { // linux is special and ships as flatpak
+                    "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+                }
+
+            return@provider dir
+        }))
+
+        @Suppress("DEPRECATION")
+        installDir.convention(gameDir)
+
+        assetsFile.convention { project.file("${installDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip") }
+        serverDir.convention(project.layout.dir(updateChannel.map { channel -> project.file("${installDir.get()}/install/${channel}/package/game/latest/Server") }))
+        hytaleUserDir.convention(project.layout.dir(factory.provider { project.file("${installDir.get()}/UserData") }))
+        serverJar.convention(serverDir.file("HytaleServer.jar"))
 
         runConfigName.convention(factory.provider {
             var name = "HytaleServer"
@@ -101,11 +110,18 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
             name
         })
 
+        @Suppress("DEPRECATION")
+        beforeRunTask.convention(syncTask)
         runDir.convention(factory.provider { project.layout.projectDirectory.file("run").asFile.absolutePath })
 
         allowOp.convention(true)
         disableSentry.convention(true)
         disableFileWatcher.convention(false)
         authMode.convention("authenticated")
+
+        addAssetsDependency.convention(project.providers.gradleProperty(PROPERTY_ADD_ASSETS).map { it.toBoolean() }.orElse(false))
+        addServerDependency.convention(project.providers.gradleProperty(PROPERTY_ADD_SERVER).map { it.toBoolean() }.orElse(true))
+
+        decompilePartialOnly.convention(project.providers.gradleProperty(PROPERTY_DECOMPILE_PARTIAL).map { it.toBoolean() }.orElse(false))
     }
 }

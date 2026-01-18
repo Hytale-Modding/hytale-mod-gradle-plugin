@@ -28,23 +28,28 @@ abstract class HytaleModPlugin: Plugin<Project> {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
 
-            dependencies {
-                // TODO should we make this configurable?
-                "implementation"(files(hytaleExtension.serverJar))
-            }
-
-            hytaleExtension.syncTask.orNull?.let { it: Task ->
+            hytaleExtension.beforeRunTask.orNull?.let { it: Task ->
                 tasks.named<ProcessResources>("processResources").configure {
                     dependsOn(it)
                 }
             }
 
             afterEvaluate {
+                dependencies {
+                    if(hytaleExtension.addServerDependency.get()) {
+                        "implementation"(files(hytaleExtension.serverJar))
+                    }
+
+                    if(hytaleExtension.addAssetsDependency.get()) {
+                        "compileOnly"(files(hytaleExtension.assetsFile))
+                    }
+                }
+
                 mkdir(hytaleExtension.runDir)
 
                 // TODO make server properties configurable
                 val programArgs = mutableListOf(
-                    "--assets=${hytaleExtension.assetsDir.get()}"
+                    "--assets=${hytaleExtension.assetsFile.get().asFile.absolutePath}"
                 )
 
                 if(hytaleExtension.allowOp.get()) {
@@ -65,7 +70,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                 hytaleExtension.programArgs.orNull?.let { programArgs.addAll(it) }
 
-                val aotFile = project.file("${hytaleExtension.serverDir.get()}/HytaleServer.aot")
+                val aotFile = hytaleExtension.serverDir.file("HytaleServer.aot").get().asFile
                 val aotArg = if (aotFile.exists()) "-XX:AOTCache=${aotFile.absolutePath}" else ""
 
                 val javaArgs = mutableListOf(aotArg)
@@ -113,7 +118,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                     workingDir(hytaleExtension.runDir)
 
-                    hytaleExtension.syncTask.orNull?.let {
+                    hytaleExtension.beforeRunTask.orNull?.let {
                         dependsOn(it)
                     }
                 }
