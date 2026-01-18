@@ -6,11 +6,9 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import javax.inject.Inject
 
@@ -23,6 +21,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         const val TASK_GROUP = "hytale"
 
         const val PROPERTY_INSTALL_DIR = "hytale.install_dir"
+        const val PROPERTY_UPDATE_CHANNEL = "hytale.update_channel"
     }
 
     @Deprecated("use installDir instead!", ReplaceWith("installDir"))
@@ -34,8 +33,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
     abstract val serverDir: DirectoryProperty
 
-    val serverJar: Provider<RegularFile>
-        get() = serverDir.file("HytaleServer.jar")
+    abstract val serverJar: RegularFileProperty
 
     abstract val hytaleUserDir: DirectoryProperty
 
@@ -68,10 +66,12 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     abstract val addAssetsDependency: Property<Boolean>
 
     init {
-        updateChannel.convention(defaultUpdateChannel)
+        updateChannel.convention(project.providers.gradleProperty(PROPERTY_UPDATE_CHANNEL).orElse(defaultUpdateChannel))
 
+        // if hytale.install_dir is set, default to that;
+        // else use the default install location
         @Suppress("DEPRECATION")
-        gameDir.convention(factory.provider {
+        gameDir.convention(project.providers.gradleProperty(PROPERTY_INSTALL_DIR).orElse(factory.provider {
             val appDirs: AppDirs = AppDirsFactory.getInstance()
             val dir =
                 if (Os.isFamily(Os.FAMILY_WINDOWS) || Os.isFamily(Os.FAMILY_MAC)) {
@@ -82,7 +82,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
                 }
 
             return@provider dir
-        })
+        }))
 
         @Suppress("DEPRECATION")
         installDir.convention(gameDir)
@@ -90,6 +90,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         assetsFile.convention { project.file("${installDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip") }
         serverDir.convention(project.layout.dir(updateChannel.map { channel -> project.file("${installDir.get()}/install/${channel}/package/game/latest/Server") }))
         hytaleUserDir.convention(project.layout.dir(factory.provider { project.file("${installDir.get()}/UserData") }))
+        serverJar.convention(serverDir.file("HytaleServer.jar"))
 
         runConfigName.convention(factory.provider {
             var name = "HytaleServer"
