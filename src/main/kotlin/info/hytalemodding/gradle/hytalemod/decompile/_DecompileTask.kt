@@ -6,6 +6,11 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.dependencies
 
+private val partialDecompilePrefixes: List<String> = listOf(
+    "com.hypixel.fastutil",
+    "com.hypixel.hytale"
+)
+
 fun Project.registerDecompileTask() {
     // TODO: register sources automatically
     //  for this to work we would need to register an afterSync task that modifies
@@ -33,10 +38,14 @@ fun Project.registerDecompileTask() {
         classpath = vf
 
         argumentProviders.add {
-            listOf(
-                serverJar.get().asFile.absolutePath,
-                sourcesFile.get().absolutePath
-            )
+            buildList {
+                if (project.extensions.hytale.decompilePartialOnly.get()) {
+                    addAll(partialDecompilePrefixes.map { "--only=${it.replace('.', '/')}" })
+                }
+
+                add(serverJar.get().asFile.absolutePath)
+                add(sourcesFile.get().absolutePath)
+            }
         }
 
         inputs.file(serverJar)

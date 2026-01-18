@@ -28,7 +28,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
 
-            hytaleExtension.syncTask.orNull?.let { it: Task ->
+            hytaleExtension.beforeRunTask.orNull?.let { it: Task ->
                 tasks.named<ProcessResources>("processResources").configure {
                     dependsOn(it)
                 }
@@ -118,7 +118,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                     workingDir(hytaleExtension.runDir)
 
-                    hytaleExtension.syncTask.orNull?.let {
+                    hytaleExtension.beforeRunTask.orNull?.let {
                         dependsOn(it)
                     }
                 }

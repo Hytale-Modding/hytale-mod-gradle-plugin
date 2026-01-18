@@ -22,6 +22,11 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
         const val PROPERTY_INSTALL_DIR = "hytale.install_dir"
         const val PROPERTY_UPDATE_CHANNEL = "hytale.update_channel"
+
+        const val PROPERTY_ADD_ASSETS = "hytale.dependencies.assets"
+        const val PROPERTY_ADD_SERVER = "hytale.dependencies.server"
+
+        const val PROPERTY_DECOMPILE_PARTIAL = "hytale.decompile_partial"
     }
 
     @Deprecated("use installDir instead!", ReplaceWith("installDir"))
@@ -43,7 +48,9 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
     abstract val runDir: Property<String>
 
+    @Deprecated("use beforeRunTask instead!", ReplaceWith("beforeRunTask"))
     abstract val syncTask: Property<Task>
+    abstract val beforeRunTask: Property<Task>
 
     abstract val allowOp: Property<Boolean>
 
@@ -64,6 +71,8 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     abstract val addServerDependency: Property<Boolean>
 
     abstract val addAssetsDependency: Property<Boolean>
+
+    abstract val decompilePartialOnly: Property<Boolean>
 
     init {
         updateChannel.convention(project.providers.gradleProperty(PROPERTY_UPDATE_CHANNEL).orElse(defaultUpdateChannel))
@@ -101,6 +110,8 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
             name
         })
 
+        @Suppress("DEPRECATION")
+        beforeRunTask.convention(syncTask)
         runDir.convention(factory.provider { project.layout.projectDirectory.file("run").asFile.absolutePath })
 
         allowOp.convention(true)
@@ -108,7 +119,9 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         disableFileWatcher.convention(false)
         authMode.convention("authenticated")
 
-        addServerDependency.convention(true)
-        addAssetsDependency.convention(false)
+        addAssetsDependency.convention(project.providers.gradleProperty(PROPERTY_ADD_ASSETS).map { it.toBoolean() }.orElse(false))
+        addServerDependency.convention(project.providers.gradleProperty(PROPERTY_ADD_SERVER).map { it.toBoolean() }.orElse(true))
+
+        decompilePartialOnly.convention(project.providers.gradleProperty(PROPERTY_DECOMPILE_PARTIAL).map { it.toBoolean() }.orElse(false))
     }
 }
