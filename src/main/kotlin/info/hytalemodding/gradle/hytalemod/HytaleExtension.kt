@@ -12,7 +12,6 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
-import java.io.File
 import javax.inject.Inject
 
 const val defaultUpdateChannel = "release"
@@ -22,9 +21,14 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     companion object {
         const val EXTENSION_NAME = "hytale"
         const val TASK_GROUP = "hytale"
+
+        const val PROPERTY_INSTALL_DIR = "hytale.install_dir"
     }
 
-    abstract val gameDir: DirectoryProperty
+    @Deprecated("use installDir instead!", ReplaceWith("installDir"))
+    abstract val gameDir: Property<String>
+
+    abstract val installDir: Property<String>
 
     abstract val assetsFile: RegularFileProperty
 
@@ -66,25 +70,26 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
     init {
         updateChannel.convention(defaultUpdateChannel)
 
-        gameDir.convention(project.layout.dir(factory.provider {
-            // FIXME kinda a hack, figure out whether there's a better way to do this
+        @Suppress("DEPRECATION")
+        gameDir.convention(factory.provider {
             val appDirs: AppDirs = AppDirsFactory.getInstance()
             val dir =
-            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                appDirs.getUserConfigDir("Hytale", null, null, true);
-            }
-            else if (Os.isFamily(Os.FAMILY_MAC)) {
-                appDirs.getUserDataDir("Hytale", null, null, true);
-            }
-            else { // linux is special and ships as flatpak
-                "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
-            }
+                if (Os.isFamily(Os.FAMILY_WINDOWS) || Os.isFamily(Os.FAMILY_MAC)) {
+                    appDirs.getUserDataDir("Hytale", null, null, true);
+                }
+                else { // linux is special and ships as flatpak
+                    "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+                }
 
-            return@provider File(dir)
-        }))
-        assetsFile.convention(gameDir.file(updateChannel.map { channel -> "install/${channel}/package/game/latest/Assets.zip" }))
-        serverDir.convention(gameDir.dir(updateChannel.map { channel -> "install/${channel}/package/game/latest/Server" }))
-        hytaleUserDir.convention(gameDir.dir("UserData"))
+            return@provider dir
+        })
+
+        @Suppress("DEPRECATION")
+        installDir.convention(gameDir)
+
+        assetsFile.convention { project.file("${installDir.get()}/install/${updateChannel.get()}/package/game/latest/Assets.zip") }
+        serverDir.convention(project.layout.dir(updateChannel.map { channel -> project.file("${installDir.get()}/install/${channel}/package/game/latest/Server") }))
+        hytaleUserDir.convention(project.layout.dir(factory.provider { project.file("${installDir.get()}/UserData") }))
 
         runConfigName.convention(factory.provider {
             var name = "HytaleServer"
