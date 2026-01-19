@@ -37,9 +37,10 @@ fun Project.registerDecompileTask() {
         mainClass.set("org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler")
         classpath = vf
 
+        val partial = project.extensions.hytale.decompilePartialOnly
         argumentProviders.add {
             buildList {
-                if (project.extensions.hytale.decompilePartialOnly.get()) {
+                if (partial.get()) {
                     addAll(partialDecompilePrefixes.map { "--only=${it.replace('.', '/')}" })
                 }
 
