@@ -65,7 +65,7 @@ gradlePlugin {
 
 publishing {
     repositories {
-        maven("https://maven.hytale-modding.info/releases") {
+        maven("https://maven.hytale-mods.dev/releases") {
             name = "HytaleModdingReleases"
             credentials {
                 username = providers.environmentVariable("HM_RELEASES_MAVEN_USER").orNull
