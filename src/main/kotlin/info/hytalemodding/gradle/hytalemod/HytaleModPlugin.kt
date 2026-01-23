@@ -8,9 +8,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.JavaExec
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.gradle.ext.Gradle
 import org.jetbrains.gradle.ext.runConfigurations
@@ -24,6 +22,8 @@ abstract class HytaleModPlugin: Plugin<Project> {
         target.pluginManager.apply("idea")
         target.pluginManager.apply("org.jetbrains.gradle.plugin.idea-ext")
 
+        val ci = target.providers.environmentVariable("CI").map { it.toBoolean() }
+
         with(target) {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
@@ -35,13 +35,31 @@ abstract class HytaleModPlugin: Plugin<Project> {
             }
 
             afterEvaluate {
-                dependencies {
-                    if(hytaleExtension.addServerDependency.get()) {
-                        "implementation"(files(hytaleExtension.serverJar))
+                if(ci.get()) {
+                    repositories {
+                        exclusiveContent {
+                            forRepository {
+                                maven("https://maven.hytale.com/${hytaleExtension.updateChannel.get()}")
+                            }
+                            filter {
+                                includeGroup("com.hypixel.hytale")
+                            }
+                        }
                     }
 
-                    if(hytaleExtension.addAssetsDependency.get()) {
-                        "compileOnly"(files(hytaleExtension.assetsFile))
+                    dependencies {
+                        "compileOnly"("com.hypixel.hytale:Server:+")
+                    }
+                }
+                else {
+                    dependencies {
+                        if(hytaleExtension.addServerDependency.get()) {
+                            "implementation"(files(hytaleExtension.serverJar))
+                        }
+
+                        if(hytaleExtension.addAssetsDependency.get()) {
+                            "compileOnly"(files(hytaleExtension.assetsFile))
+                        }
                     }
                 }
 
