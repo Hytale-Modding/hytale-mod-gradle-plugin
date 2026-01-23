@@ -22,7 +22,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
         target.pluginManager.apply("idea")
         target.pluginManager.apply("org.jetbrains.gradle.plugin.idea-ext")
 
-        val ci = target.providers.environmentVariable("CI").map { it.toBoolean() }
+        val ci = target.providers.environmentVariable("CI").map { it.toBoolean() }.orElse(false)
 
         with(target) {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
