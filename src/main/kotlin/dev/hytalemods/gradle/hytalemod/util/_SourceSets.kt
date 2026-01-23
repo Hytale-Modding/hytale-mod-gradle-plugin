@@ -1,4 +1,4 @@
-package info.hytalemodding.gradle.hytalemod.util
+package dev.hytalemods.gradle.hytalemod.util
 
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer

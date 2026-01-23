@@ -1,4 +1,4 @@
-package info.hytalemodding.gradle.hytalemod
+package dev.hytalemods.gradle.hytalemod
 
 import net.harawata.appdirs.AppDirs
 import net.harawata.appdirs.AppDirsFactory

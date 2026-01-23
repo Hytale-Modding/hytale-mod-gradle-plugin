@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 
-group = "info.hytalemodding"
+group = "dev.hytalemods"
 version = providers.environmentVariable("PLUGIN_VERSION").orNull ?: "0.0.0-development"
 
 // Kotlin does not support building with Java 25 yet.

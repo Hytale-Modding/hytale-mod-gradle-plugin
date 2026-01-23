@@ -1,6 +1,6 @@
-package info.hytalemodding.gradle.hytalemod.util
+package dev.hytalemods.gradle.hytalemod.util
 
-import info.hytalemodding.gradle.hytalemod.HytaleExtension
+import dev.hytalemods.gradle.hytalemod.HytaleExtension
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.kotlin.dsl.getByName
 import org.gradle.plugins.ide.idea.model.IdeaModel

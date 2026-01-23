@@ -1,7 +1,7 @@
-package info.hytalemodding.gradle.hytalemod.decompile
+package dev.hytalemods.gradle.hytalemod.decompile
 
-import info.hytalemodding.gradle.hytalemod.HytaleExtension
-import info.hytalemodding.gradle.hytalemod.util.hytale
+import dev.hytalemods.gradle.hytalemod.HytaleExtension
+import dev.hytalemods.gradle.hytalemod.util.hytale
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.dependencies

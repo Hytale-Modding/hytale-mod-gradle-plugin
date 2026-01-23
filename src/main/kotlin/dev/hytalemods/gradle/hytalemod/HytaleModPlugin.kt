@@ -1,9 +1,9 @@
-package info.hytalemodding.gradle.hytalemod
+package dev.hytalemods.gradle.hytalemod
 
-import info.hytalemodding.gradle.hytalemod.decompile.registerDecompileTask
-import info.hytalemodding.gradle.hytalemod.util.ideaExt
-import info.hytalemodding.gradle.hytalemod.util.main
-import info.hytalemodding.gradle.hytalemod.util.sourceSets
+import dev.hytalemods.gradle.hytalemod.decompile.registerDecompileTask
+import dev.hytalemods.gradle.hytalemod.util.ideaExt
+import dev.hytalemods.gradle.hytalemod.util.main
+import dev.hytalemods.gradle.hytalemod.util.sourceSets
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
