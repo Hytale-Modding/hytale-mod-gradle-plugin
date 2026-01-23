@@ -42,7 +42,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
                                 maven("https://maven.hytale.com/${hytaleExtension.updateChannel.get()}")
                             }
                             filter {
-                                includeGroup("com.hypixel.hytale")
+                                includeModule("com.hypixel.hytale", "Server")
                             }
                         }
                     }
