@@ -15,7 +15,7 @@ enum class ServerJarSource {
         }
 
         fun defaultFor(project: Project): ServerJarSource {
-            return if (project.ci.get()) MAVEN_SQUASHED else GAME_FILES
+            return if (project.ci.get()) MAVEN_FATJAR else GAME_FILES
         }
     }
 }
