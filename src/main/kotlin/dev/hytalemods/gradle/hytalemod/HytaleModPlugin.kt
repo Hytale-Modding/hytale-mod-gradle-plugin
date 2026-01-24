@@ -1,14 +1,15 @@
 package dev.hytalemods.gradle.hytalemod
 
 import dev.hytalemods.gradle.hytalemod.decompile.registerDecompileTask
-import dev.hytalemods.gradle.hytalemod.util.ideaExt
-import dev.hytalemods.gradle.hytalemod.util.main
-import dev.hytalemods.gradle.hytalemod.util.sourceSets
+import dev.hytalemods.gradle.hytalemod.util.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.JavaExec
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.repositories
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.gradle.ext.Gradle
 import org.jetbrains.gradle.ext.runConfigurations
@@ -35,31 +36,47 @@ abstract class HytaleModPlugin: Plugin<Project> {
             }
 
             afterEvaluate {
-                if(ci.get()) {
-                    repositories {
-                        exclusiveContent {
-                            forRepository {
-                                maven("https://maven.hytale.com/${hytaleExtension.updateChannel.get()}")
-                            }
-                            filter {
-                                includeModule("com.hypixel.hytale", "Server")
-                            }
+                @Suppress("DEPRECATION")
+                if(ci.get() && hytaleExtension.serverJarSource.get() == ServerJarSource.GAME_FILES) {
+                    logger.warn("Running on CI and trying to get the server Jar from game files. This is most likely not going to work!")
+                }
+
+                @Suppress("DEPRECATION")
+                when(hytaleExtension.serverJarSource.get()) {
+                    ServerJarSource.MAVEN_FATJAR -> {
+                        repositories {
+                            withHytaleMaven(hytaleExtension.updateChannel.get())
+                        }
+
+                        dependencies {
+                            "compileOnly"("com.hypixel.hytale:Server:${hytaleExtension.version.get()}")
                         }
                     }
+                    ServerJarSource.MAVEN_SQUASHED -> {
+                        repositories {
+                            withCodeMCMaven()
+                        }
 
-                    dependencies {
-                        "compileOnly"("com.hypixel.hytale:Server:+")
+                        dependencies {
+                            "compileOnly"("com.hypixel.hytale:Server-squashed:${hytaleExtension.version.get()}")
+                        }
+                    }
+                    ServerJarSource.GAME_FILES -> {
+                        if(hytaleExtension.addServerDependency.get()) {
+                            if(ci.get()) {
+                                logger.warn("Running on CI and trying to get the server Jar from game files. This is most likely not going to work!")
+                            }
+
+                            dependencies {
+                                "implementation"(files(hytaleExtension.serverJar))
+                            }
+                        }
                     }
                 }
-                else {
-                    dependencies {
-                        if(hytaleExtension.addServerDependency.get()) {
-                            "implementation"(files(hytaleExtension.serverJar))
-                        }
 
-                        if(hytaleExtension.addAssetsDependency.get()) {
-                            "compileOnly"(files(hytaleExtension.assetsFile))
-                        }
+                if(hytaleExtension.addAssetsDependency.get()) {
+                    dependencies {
+                        "compileOnly"(files(hytaleExtension.assetsFile))
                     }
                 }
 

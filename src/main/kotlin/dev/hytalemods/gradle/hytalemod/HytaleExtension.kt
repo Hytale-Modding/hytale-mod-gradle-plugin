@@ -27,7 +27,10 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         const val PROPERTY_ADD_SERVER = "hytale.dependencies.server"
 
         const val PROPERTY_DECOMPILE_PARTIAL = "hytale.decompile_partial"
+        const val PROPERTY_SERVER_JAR_SOURCE = "hytale.server_jar_source"
     }
+
+    abstract val version: Property<String>
 
     @Deprecated("use installDir instead!", ReplaceWith("installDir"))
     abstract val gameDir: Property<String>
@@ -74,7 +77,11 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
     abstract val decompilePartialOnly: Property<Boolean>
 
+    @Deprecated("this property will likely be removed at a later point, use at your own risk")
+    abstract val serverJarSource: Property<ServerJarSource>
+
     init {
+        version.convention("+")
         updateChannel.convention(project.providers.gradleProperty(PROPERTY_UPDATE_CHANNEL).orElse(defaultUpdateChannel))
 
         // if hytale.install_dir is set, default to that;
@@ -123,5 +130,7 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
         addServerDependency.convention(project.providers.gradleProperty(PROPERTY_ADD_SERVER).map { it.toBoolean() }.orElse(true))
 
         decompilePartialOnly.convention(project.providers.gradleProperty(PROPERTY_DECOMPILE_PARTIAL).map { it.toBoolean() }.orElse(false))
+        @Suppress("DEPRECATION")
+        serverJarSource.convention(project.providers.gradleProperty(PROPERTY_SERVER_JAR_SOURCE).map { ServerJarSource.fromString(it) }).orElse(ServerJarSource.MAVEN_SQUASHED)
     }
 }
