@@ -131,6 +131,6 @@ abstract class HytaleExtension @Inject constructor(factory: ProviderFactory, pri
 
         decompilePartialOnly.convention(project.providers.gradleProperty(PROPERTY_DECOMPILE_PARTIAL).map { it.toBoolean() }.orElse(false))
         @Suppress("DEPRECATION")
-        serverJarSource.convention(project.providers.gradleProperty(PROPERTY_SERVER_JAR_SOURCE).map { ServerJarSource.fromString(it) }).orElse(ServerJarSource.MAVEN_SQUASHED)
+        serverJarSource.convention(project.providers.gradleProperty(PROPERTY_SERVER_JAR_SOURCE).map { ServerJarSource.fromString(it) }).orElse(project.provider { ServerJarSource.defaultFor(project) })
     }
 }

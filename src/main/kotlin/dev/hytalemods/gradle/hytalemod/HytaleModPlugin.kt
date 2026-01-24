@@ -23,8 +23,6 @@ abstract class HytaleModPlugin: Plugin<Project> {
         target.pluginManager.apply("idea")
         target.pluginManager.apply("org.jetbrains.gradle.plugin.idea-ext")
 
-        val ci = target.providers.environmentVariable("CI").map { it.toBoolean() }.orElse(false)
-
         with(target) {
             val hytaleExtension = extensions.create(HytaleExtension.EXTENSION_NAME, HytaleExtension::class)
             val ideaModel = rootProject.extensions.ideaExt
@@ -36,13 +34,10 @@ abstract class HytaleModPlugin: Plugin<Project> {
             }
 
             afterEvaluate {
+                //FIXME somehow even tho there is a convention set,
+                // gradle insists the property has no value.
                 @Suppress("DEPRECATION")
-                if(ci.get() && hytaleExtension.serverJarSource.get() == ServerJarSource.GAME_FILES) {
-                    logger.warn("Running on CI and trying to get the server Jar from game files. This is most likely not going to work!")
-                }
-
-                @Suppress("DEPRECATION")
-                when(hytaleExtension.serverJarSource.get()) {
+                when(hytaleExtension.serverJarSource.orNull ?: ServerJarSource.defaultFor(this)) {
                     ServerJarSource.MAVEN_FATJAR -> {
                         repositories {
                             withHytaleMaven(hytaleExtension.updateChannel.get())
@@ -63,7 +58,7 @@ abstract class HytaleModPlugin: Plugin<Project> {
                     }
                     ServerJarSource.GAME_FILES -> {
                         if(hytaleExtension.addServerDependency.get()) {
-                            if(ci.get()) {
+                            if(target.ci.get()) {
                                 logger.warn("Running on CI and trying to get the server Jar from game files. This is most likely not going to work!")
                             }
 
