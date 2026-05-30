@@ -37,7 +37,6 @@ kotlin {
         freeCompilerArgs = listOf(
             "-Werror",
             "-java-parameters",
-            "-Xjvm-default=all",
             "-Xsam-conversions=class",
             "-Xjsr305=strict",
             "-Xjspecify-annotations=strict"
