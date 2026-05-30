@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     idea
     `kotlin-dsl`
@@ -8,7 +10,8 @@ group = "dev.hytalemods"
 version = providers.environmentVariable("PLUGIN_VERSION").orNull ?: "0.0.0-development"
 
 // Kotlin does not support building with Java 25 yet.
-val javaVersion = 21
+val javaVersion = 25
+val javaTarget = JvmTarget.JVM_25
 
 val pluginId: String by project
 val pluginDisplayName: String by project
@@ -41,7 +44,9 @@ kotlin {
             "-Xjsr305=strict",
             "-Xjspecify-annotations=strict"
         )
+
         allWarningsAsErrors = true
+        jvmTarget = javaTarget
     }
 }
 
