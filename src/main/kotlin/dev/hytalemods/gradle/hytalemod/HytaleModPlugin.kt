@@ -100,10 +100,13 @@ abstract class HytaleModPlugin: Plugin<Project> {
 
                 hytaleExtension.programArgs.orNull?.let { programArgs.addAll(it) }
 
-                val aotFile = hytaleExtension.serverDir.file("HytaleServer.aot").get().asFile
-                val aotArg = if (aotFile.exists()) "-XX:AOTCache=${aotFile.absolutePath}" else ""
+                val javaArgs = mutableListOf<String>()
 
-                val javaArgs = mutableListOf(aotArg)
+                listOf("HytaleServer.aot.config", "HytaleServer.aot")
+                    .map { hytaleExtension.serverDir.file(it).get().asFile }
+                    .first { it.exists() }
+                    .let { javaArgs.add("-XX:AOTCache=${it.absolutePath}") }
+
                 hytaleExtension.jvmArgs.orNull?.let { javaArgs.addAll(it) }
                 javaArgs.add("--enable-native-access=ALL-UNNAMED")
 
