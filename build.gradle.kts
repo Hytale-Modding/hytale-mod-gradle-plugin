@@ -42,6 +42,7 @@ kotlin {
             "-Xjsr305=strict",
             "-Xjspecify-annotations=strict"
         )
+        allWarningsAsErrors = true
     }
 }
 
